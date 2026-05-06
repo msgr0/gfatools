@@ -136,7 +136,6 @@ char **gfa_read_list(const char *o, int *n_);
 int32_t *gfa_list2seg(const gfa_t *g, int32_t n_seg, char *const* seg, int32_t *n_ret);
 int32_t *gfa_sub_extend(const gfa_t *g, int n_seg, const int32_t *seg, int step, int32_t *n_ret);
 
-gfa_t *gfa_subview3(gfa_t *g, int32_t n_seg, const int32_t *seg, int32_t sub_walk, int32_t keep_coor);
 gfa_t *gfa_subview2(gfa_t *g, int32_t n_seg, const int32_t *seg, int32_t sub_walk);
 gfa_t *gfa_subview(gfa_t *g, int32_t n_seg, const int32_t *seg);
 void gfa_subview_destroy(gfa_t *f);
