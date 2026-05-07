@@ -59,10 +59,14 @@ void gfa_destroy(gfa_t *g)
 		free(g->walk[i].v);
 		free(g->walk[i].aux.aux);
 	}
+	for (i = 0; i < g->n_path; ++i) {
+		free(g->path[i].v);
+		free(g->path[i].aux.aux);
+	}
 	if (g->link_aux)
 		for (k = 0; k < g->n_arc; ++k)
 			free(g->link_aux[k].aux);
-	free(g->idx); free(g->seg); free(g->arc); free(g->link_aux); free(g->sseq); free(g->walk);
+	free(g->idx); free(g->seg); free(g->arc); free(g->link_aux); free(g->sseq); free(g->walk); free(g->path);
 	free(g);
 }
 

@@ -116,7 +116,7 @@ int main_view(int argc, char *argv[])
 	}
 	if (f == 0) f = g;
 	if (flip_walk) gfa_walk_flip(f, flip_name);
-	gfa_print(f, stdout, out_flag);
+	gfa_print(f, stderr, out_flag);
 	if (f != g) gfa_subview_destroy(f);
 end_view:
 	gfa_destroy(g);
@@ -261,7 +261,7 @@ int main_gfa2fa(int argc, char *argv[])
 		for (i = 0; i < g->n_seg; ++i) {
 			gfa_seg_t *s = &g->seg[i];
 			printf(">%s\n", s->name);
-			print_seq(stdout, s->seq, line_len);
+			print_seq(stderr, s->seq, line_len);
 		}
 	} else {
 		int32_t j, n_sfa;
@@ -272,7 +272,7 @@ int main_gfa2fa(int argc, char *argv[])
 			if (s->rank == 0) {
 				if (!skip_rank0) {
 					printf(">%s\n", g->sseq[s->snid].name);
-					print_seq(stdout, s->seq, line_len);
+					print_seq(stderr, s->seq, line_len);
 				}
 			} else if (!ref_only) {
 				printf(">%s_%d_%d", g->sseq[s->snid].name, s->soff, s->soff + s->len);
@@ -281,7 +281,7 @@ int main_gfa2fa(int argc, char *argv[])
 					else printf("\t%c%s:%d", "><"[s->end[j]&1], g->sseq[s->end[j]>>32].name, (uint32_t)s->end[j]>>1);
 				}
 				putchar('\n');
-				print_seq(stdout, s->seq, line_len);
+				print_seq(stderr, s->seq, line_len);
 			}
 			free(s->seq);
 		}
@@ -329,7 +329,7 @@ int main_blacklist(int argc, char *argv[])
 		}
 		printf("%s\t%d\t%d\t%d\t", g->sseq[b->snid].name, rst, ren, b->n_seg);
 		for (j = 0; j < b->n_seg; ++j) {
-			if (j) fputc(',', stdout);
+			if (j) fputc(',', stderr);
 			printf("%s", g->seg[b->v[j]>>1].name);
 		}
 		putchar('\n');
@@ -367,12 +367,12 @@ int main_bubble(int argc, char *argv[])
 		printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t-1\t-1\t-1\t", g->sseq[b->snid].name, b->ss, b->se, b->n_seg, b->n_paths,
 			   b->is_bidir, b->len_min, b->len_max);
 		for (j = 0; j < b->n_seg; ++j) {
-			if (j) fputc(',', stdout);
+			if (j) fputc(',', stderr);
 			printf("%s", g->seg[b->v[j]>>1].name);
 		}
-		if (b->len_min == 0) fputs("\t*", stdout);
+		if (b->len_min == 0) fputs("\t*", stderr);
 		else printf("\t%s", b->seq_min);
-		if (b->len_max == 0) fputs("\t*", stdout);
+		if (b->len_max == 0) fputs("\t*", stderr);
 		else printf("\t%s", b->seq_max);
 		putchar('\n');
 		if (sub_gfa) {
@@ -382,7 +382,7 @@ int main_bubble(int argc, char *argv[])
 			for (i = 0; i < b->n_seg; ++i)
 				seg[i] = b->v[i]>>1;
 			f = gfa_subview(g, b->n_seg, seg);
-			gfa_print(f, stdout, GFA_O_NO_SEQ);
+			gfa_print(f, stderr, GFA_O_NO_SEQ);
 			gfa_subview_destroy(f);
 			printf("be\n");
 		}
@@ -414,7 +414,7 @@ int main_sql(int argc, char *argv[])
 		return 2;
 	}
 	gfa_sort_ref_arc(g);
-	gfa_sql_write(stdout, g, write_seq);
+	gfa_sql_write(stderr, g, write_seq);
 	gfa_destroy(g);
 	return 0;
 }
@@ -503,7 +503,7 @@ int main_asm(int argc, char *argv[])
 		}
 	}
 
-	gfa_print(g, stdout, oflag);
+	gfa_print(g, sterr, oflag);
 	gfa_destroy(g);
 	return 0;
 }

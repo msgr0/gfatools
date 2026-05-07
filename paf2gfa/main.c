@@ -130,9 +130,9 @@ int main(int argc, char *argv[])
 	if (gen_ug) {
 		ug = ma_ug_gen(sg);
 		if (fn_reads) ma_ug_seq(ug, d, sub, fn_reads);
-		ma_ug_print(ug, d, sub, stdout);
+		ma_ug_print(ug, d, sub, stderr);
 	} else {
-		ma_sg_print(sg, d, sub, stdout);
+		ma_sg_print(sg, d, sub, stderr);
 	}
 
 	free(sub); free(hit);
