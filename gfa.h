@@ -150,6 +150,10 @@ extern "C" {
 gfa_t *gfa_init(void);
 void gfa_destroy(gfa_t *g);
 gfa_t *gfa_read(const char *fn);
+// Lite reader: parses S/P/W lines only, skips L-lines and gfa_finalize.
+// Use when arcs/adjacency are not needed (orders of magnitude faster on
+// graphs with millions of arcs).
+gfa_t *gfa_read_no_arcs(const char *fn);
 void gfa_print(const gfa_t *g, FILE *fp, int M_only);
 char *gfa_write(const gfa_t *g, int flag, int *len);
 

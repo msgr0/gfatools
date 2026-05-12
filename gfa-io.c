@@ -588,6 +588,67 @@ gfa_t *gfa_read(const char *fn) {
   return g;
 }
 
+// Lite reader: parses S/P/W lines only, skips L lines entirely, and skips
+// gfa_finalize. Designed for callers that only need segments and paths
+// (e.g. --csig in this project). Drastically faster on graphs with millions
+// of arcs, since gfa_finalize does several O(n_arc * log n_arc) passes.
+gfa_t *gfa_read_no_arcs(const char *fn) {
+  gzFile fp;
+  gfa_t *g;
+  kstring_t s = {0, 0, 0}, fa_seq = {0, 0, 0};
+  kstream_t *ks;
+  int dret, is_fa = 0;
+  gfa_seg_t *fa_seg = 0;
+  uint64_t lineno = 0;
+
+  fp = fn && strcmp(fn, "-") ? gzopen(fn, "r") : gzdopen(0, "r");
+  if (fp == 0)
+    return 0;
+  ks = ks_init(fp);
+  g = gfa_init();
+  while (ks_getuntil(ks, KS_SEP_LINE, &s, &dret) >= 0) {
+    int ret = 0;
+    ++lineno;
+    if (s.l > 0 && s.s[0] == '>') {
+      is_fa = 1;
+      if (fa_seg)
+        gfa_update_fa_seq(g, fa_seg, fa_seq.l, fa_seq.s);
+      fa_seg = gfa_parse_fa_hdr(g, s.s);
+      fa_seq.l = 0;
+    } else if (is_fa) {
+      if (s.l >= 3 && s.s[1] == '\t') {
+        gfa_update_fa_seq(g, fa_seg, fa_seq.l, fa_seq.s);
+        fa_seg = 0;
+        is_fa = 0;
+      } else
+        kputsn(s.s, s.l, &fa_seq);
+    }
+    if (is_fa)
+      continue;
+    if (s.l < 3 || s.s[1] != '\t')
+      continue;
+    if (s.s[0] == 'S')
+      ret = gfa_parse_S(g, s.s);
+    else if (s.s[0] == 'W')
+      ret = gfa_parse_W(g, s.s);
+    else if (s.s[0] == 'P')
+      ret = gfa_parse_P(g, s.s);
+    // 'L' lines intentionally skipped.
+    if (ret < 0 && gfa_verbose >= 1)
+      fprintf(stderr, "[E] invalid %c-line at line %ld (error code %d)\n",
+              s.s[0], (long)lineno, ret);
+  }
+  if (is_fa && fa_seg)
+    gfa_update_fa_seq(g, fa_seg, fa_seq.l, fa_seq.s);
+  free(fa_seq.s);
+  free(s.s);
+  // No gfa_finalize: we don't need sorted/indexed arcs. Only fix segs.
+  gfa_fix_no_seg(g);
+  ks_destroy(ks);
+  gzclose(fp);
+  return g;
+}
+
 static inline void str_enlarge(kstring_t *s, int l) {
   if (s->l + l + 1 > s->m) {
     s->m = s->l + l + 1;

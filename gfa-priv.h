@@ -78,6 +78,7 @@ const char *gfa_sample_add(gfa_t *g, const char *name);
 // whole graph operations
 void gfa_arc_sort(gfa_t *g);
 void gfa_arc_index(gfa_t *g);
+uint32_t gfa_fix_no_seg(gfa_t *g);
 uint32_t gfa_fix_symm_add(gfa_t *g);
 void gfa_fix_symm_del(gfa_t *g); // delete multiple edges and restore skew-symmetry
 void gfa_arc_rm(gfa_t *g);
