@@ -478,6 +478,13 @@ int gfa_parse_P(gfa_t *g, char *s) {
             }
           }
         }
+        // P-lines carry no start/end fields the way W-lines do (i==3/i==4
+        // above), so without this scan_samples' walk_bp accounting sums to 0
+        // for every P-line-derived sample -- which silently defeats
+        // --split-walk's memory cap, the one that actually bounds RSS.
+        t.st = 0;
+        for (int32_t vi = 0, en = 0; vi < t.n_v; vi++)
+          en += (int32_t)g->seg[t.v[vi] >> 1].len, t.en = en;
         is_ok = 1, rest = c ? p + 1 : 0;
         break;
       }
@@ -490,7 +497,26 @@ int gfa_parse_P(gfa_t *g, char *s) {
     int l_aux, m_aux = 0;
     uint8_t *aux = 0;
     l_aux = gfa_aux_parse(rest, &aux, &m_aux); // parse optional tags
-    t.sample = gfa_sample_add(g, sample);
+    // PanSN pathname (sample#hap#contig): a P-line carries no separate
+    // sample/hap/contig fields the way a W-line does, so without this every
+    // CONTIG of every haplotype names its own "sample" -- a diploid panel
+    // with unplaced scaffolds presents as thousands of one-contig samples
+    // instead of a handful of real ones. Split it exactly the way
+    // gfa_parse_W already gets these three fields (sample, hap, snid), so a
+    // P-line-only GFA (pggb/odgi output) produces the same gfa_walk_t shape
+    // a W-line one does and no downstream (sample, haplotype) consumer needs
+    // a P-line-specific case. A name with fewer than two '#' is not PanSN --
+    // keep the whole thing as `sample`, hap 0, exactly as before.
+    char *h1 = strchr(sample, '#');
+    char *h2 = h1 ? strchr(h1 + 1, '#') : 0;
+    if (h2) {
+      *h1 = 0; *h2 = 0;
+      t.sample = gfa_sample_add(g, sample);
+      t.hap = atoi(h1 + 1);
+      t.snid = gfa_sseq_add(g, h2 + 1);
+    } else {
+      t.sample = gfa_sample_add(g, sample);
+    }
     if (l_aux > 0)
       t.aux.m_aux = m_aux, t.aux.l_aux = l_aux, t.aux.aux = aux;
     else if (aux)
