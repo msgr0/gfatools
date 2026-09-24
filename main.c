@@ -147,24 +147,31 @@ int main_stat(int argc, char *argv[])
 		if (!g->arc[i].comp) ++n_link;
 	printf("Number of links: %lld\n", (long long)n_link);
 	printf("Number of arcs: %lld\n", (long long)g->n_arc);
-	printf("Max rank: %d\n", g->max_rank);
+	int32_t max_rank = 0;
 	for (i = 0; i < g->n_seg; ++i) {
 		tot_seg_len += g->seg[i].len;
+		if (g->seg[i].rank > max_rank) max_rank = g->seg[i].rank;
 		if (g->seg[i].rank == 0) seg0_len += g->seg[i].len;
 	}
+	printf("Max rank (SR tag?): %d\n", max_rank);
 	printf("Total segment length: %lld\n", (long long)tot_seg_len);
 	if (g->n_seg)
 		printf("Average segment length: %.3f\n", (double)tot_seg_len / g->n_seg);
 	printf("Sum of rank-0 segment lengths: %lld\n", (long long)seg0_len);
 	n_vtx = gfa_n_vtx(g);
+	int32_t min_deg = 0;
 	for (i = 0; i < n_vtx; ++i) {
 		int32_t nv = gfa_arc_n(g, i);
 		if (nv > max_deg) max_deg = nv;
+		if (min_deg == 0 || nv < min_deg) min_deg = nv;
 		tot_deg += nv;
 	}
 	printf("Max degree: %d\n", max_deg);
+	printf("Min degree: %d\n", min_deg);
 	if (n_vtx > 0)
 		printf("Average degree: %.3f\n", (double)tot_deg / n_vtx);
+	printf("Number of walks: %d\n", g->n_walk);
+	printf("Number of paths: %d\n", g->n_path);
 	gfa_destroy(g);
 	return 0;
 }
@@ -503,7 +510,7 @@ int main_asm(int argc, char *argv[])
 		}
 	}
 
-	gfa_print(g, sterr, oflag);
+	gfa_print(g, stderr, oflag);
 	gfa_destroy(g);
 	return 0;
 }
